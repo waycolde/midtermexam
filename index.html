@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
+    integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://kit.fontawesome.com/090fe43456.js" crossorigin="anonymous"></script>
+
+  <title>The Daft Collective</title>
+
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      margin: 0;
+      background-color: rgb(143, 0, 0);
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+
+    #authForm {
+      background-color: rgba(0, 0, 0, 0.589);
+      padding: 40px 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(88, 88, 88, 0.808);
+      max-width: 400px;
+      width: 100%;
+      margin: auto;
+      margin-bottom: auto;
+    }
+
+    .logo {
+      max-width: 150px;
+      margin: 0 auto 20px;
+      display: block;
+    }
+
+    #secretContent {
+      display: none;
+      padding: 40px 20px;
+      max-width: 600px;
+      margin: 40px auto;
+      background-color: #000000;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(88, 88, 88, 0.829);
+    }
+
+    #secretContent h2 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    #secretContent .form-group {
+      margin-bottom: 20px;
+    }
+
+    #secretContent input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+      outline: none;
+    }
+
+    #secretContent .btn-group {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    #secretContent .btn-group button {
+      flex: 1;
+      padding: 10px;
+      background-color: #210007;
+      border: none;
+      color: white;
+      border-radius: 5px;
+    }
+
+    #signOutButton {
+      display: block;
+      margin: 30px auto 0;
+      background-color: #210007;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div id="authForm" class="container">
+    <img src="images/tdc.jpg.jfif" alt="Logo" class="logo" />
+    <input type="email" class="form-control mb-3" placeholder="Email" id="userEmail" required />
+    <input type="password" class="form-control mb-3" placeholder="Password" id="userPassword" required />
+    <button class="btn btn-primary btn-block mb-2" id="signUpButton" style="background-color: #210007; border: #ffff;">Sign Up</button>
+    <button class="btn btn-secondary btn-block" id="signInButton" style="background-color: #210007; border: #ffff;">Login</button>
+  </div>
+
+  <div id="secretContent">
+    <h1>The Daft Collective</h1>
+    <div class="form-group"><label for="roll">Roll No:</label><input type="text" id="roll" /></div>
+    <div class="form-group"><label for="name">Name:</label><input type="text" id="name" /></div>
+    <div class="form-group"><label for="gender">Gender:</label><input type="text" id="gender" /></div>
+    <div class="form-group"><label for="address">Address:</label><input type="text" id="address" /></div>
+    <div class="btn-group">
+      <button id="insert">Insert</button>
+      <button id="read">Read</button>
+      <button id="update">Update</button>
+      <button id="delete">Delete</button>
+    </div>
+    <button id="signOutButton" class="btn">Sign Out</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-auth.js";
+    import {
+      getDatabase,
+      ref,
+      set,
+      get,
+      update,
+      remove,
+      child
+    } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js";
+
+    const firebaseConfig = {
+    apiKey: "AIzaSyBhzuY-lSmw9UTwNtiSKyumRWeqqXWhpRQ",
+    authDomain: "login-9a928.firebaseapp.com",
+    databaseURL: "https://login-9a928-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "login-9a928",
+    storageBucket: "login-9a928.firebasestorage.app",
+    messagingSenderId: "1014563820699",
+    appId: "1:1014563820699:web:7c60e66913beb66b5e623e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    const userEmail = document.querySelector("#userEmail");
+    const userPassword = document.querySelector("#userPassword");
+    const authForm = document.querySelector("#authForm");
+    const secretContent = document.querySelector("#secretContent");
+    const signUpButton = document.querySelector("#signUpButton");
+    const signInButton = document.querySelector("#signInButton");
+    const signOutButton = document.querySelector("#signOutButton");
+
+    const roll = document.querySelector("#roll");
+    const name = document.querySelector("#name");
+    const gender = document.querySelector("#gender");
+    const address = document.querySelector("#address");
+
+    const clearForm = () => {
+      roll.value = "";
+      name.value = "";
+      gender.value = "";
+      address.value = "";
+    };
+
+    const userSignUp = async () => {
+      createUserWithEmailAndPassword(auth, userEmail.value, userPassword.value)
+        .then(() => Swal.fire("Account created successfully!"))
+        .catch(error => Swal.fire("Error", error.message, "error"));
+    };
+
+    const userSignIn = async () => {
+      signInWithEmailAndPassword(auth, userEmail.value, userPassword.value)
+        .then(() => Swal.fire("Signed in successfully!"))
+        .catch(error => Swal.fire("Error", error.message, "error"));
+    };
+
+    const userSignOut = async () => {
+      await signOut(auth);
+      Swal.fire("User signed out");
+    };
+
+    const checkAuthState = async () => {
+      onAuthStateChanged(auth, user => {
+        if (user) {
+          authForm.style.display = "none";
+          secretContent.style.display = "block";
+        } else {
+          authForm.style.display = "block";
+          secretContent.style.display = "none";
+        }
+      });
+    };
+
+    const insertData = () => {
+      set(ref(db, 'users/' + roll.value), {
+        name: name.value,
+        gender: gender.value,
+        address: address.value,
+      })
+      .then(() => {
+        Swal.fire("Data inserted successfully!");
+        clearForm();
+      })
+      .catch(error => Swal.fire("Error", error.message, "error"));
+    };
+
+    const readData = () => {
+      get(ref(db, 'users/' + roll.value)).then(snapshot => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          name.value = data.name;
+          gender.value = data.gender;
+          address.value = data.address;
+          Swal.fire("Data fetched successfully!");
+        } else {
+          Swal.fire("No data found!");
+        }
+      }).catch(error => Swal.fire("Error", error.message, "error"));
+    };
+
+    const updateData = () => {
+      update(ref(db, 'users/' + roll.value), {
+        name: name.value,
+        gender: gender.value,
+        address: address.value,
+        email: email.value,
+        status: status.value
+      })
+      .then(() => {
+        Swal.fire("Data updated successfully!");
+        clearForm();
+      })
+      .catch(error => Swal.fire("Error", error.message, "error"));
+    };
+
+    const deleteData = () => {
+      remove(ref(db, 'users/' + roll.value))
+        .then(() => {
+          Swal.fire("Data deleted successfully!");
+          clearForm();
+        })
+        .catch(error => Swal.fire("Error", error.message, "error"));
+    };
+
+    checkAuthState();
+
+    signUpButton.addEventListener("click", userSignUp);
+    signInButton.addEventListener("click", userSignIn);
+    signOutButton.addEventListener("click", userSignOut);
+
+    document.querySelector("#insert").addEventListener("click", insertData);
+    document.querySelector("#read").addEventListener("click", readData);
+    document.querySelector("#update").addEventListener("click", updateData);
+    document.querySelector("#delete").addEventListener("click", deleteData);
+  </script>
+</body>
+</html>
